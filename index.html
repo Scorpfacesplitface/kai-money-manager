@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#142d31">
+  <meta name="description" content="Private, offline-first personal money manager.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <title>KAI Money Manager</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-mark">K</div>
+    <div class="brand-copy"><strong>KAI Money Manager</strong><small>YOUR MONEY. YOUR PLAN. YOUR FUTURE.</small></div>
+    <span class="privacy-pill"><span class="dot"></span> On-device</span>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div class="eyebrow">PERSONAL FINANCE · SGD</div>
+      <div class="balance-label">Net recorded balance</div>
+      <div id="netBalance" class="balance">S$0.00</div>
+      <div class="hero-stats">
+        <div><span>Income</span><strong id="totalIncome">S$0.00</strong></div>
+        <div><span>Expenses</span><strong id="totalExpenses">S$0.00</strong></div>
+        <div><span>Goal contributions</span><strong id="totalContributions">S$0.00</strong></div>
+      </div>
+      <p class="hero-note">Figures are based only on records you enter. This is not a bank balance.</p>
+    </section>
+
+    <nav class="tabs" aria-label="Main sections">
+      <button class="tab active" data-view="dashboard">Overview</button>
+      <button class="tab" data-view="transactions">Tracker</button>
+      <button class="tab" data-view="planner">Planner</button>
+      <button class="tab" data-view="goals">Goals</button>
+      <button class="tab" data-view="tools">Tools & backup</button>
+    </nav>
+
+    <section id="view-dashboard" class="view">
+      <div class="section-heading"><div><p class="eyebrow">AT A GLANCE</p><h1>Dashboard</h1></div><button class="primary small" id="quickAdd">＋ Add entry</button></div>
+      <div class="summary-grid">
+        <article class="card metric"><span>This month’s income</span><strong id="monthIncome">S$0.00</strong><small id="monthIncomeCount">0 entries</small></article>
+        <article class="card metric"><span>This month’s spending</span><strong id="monthExpenses">S$0.00</strong><small id="budgetStatus">Set a budget in Planner</small></article>
+      </div>
+      <article class="card">
+        <div class="card-title"><div><h2>Income vs spending</h2><p>Current month · SGD</p></div></div>
+        <div class="chart-wrap"><canvas id="monthlyChart" aria-label="Monthly income and spending chart"></canvas></div>
+        <div class="legend"><span><i class="legend-income"></i>Income</span><span><i class="legend-expense"></i>Spending</span></div>
+      </article>
+      <article class="card">
+        <div class="card-title"><div><h2>Spending by category</h2><p>Current month</p></div></div>
+        <div id="categoryChart" class="category-chart"><p class="empty">Add expenses to see your breakdown.</p></div>
+      </article>
+      <article class="card">
+        <div class="card-title"><div><h2>Savings goals</h2><p>Progress from separate goal contributions</p></div><button class="text-button" data-goto="goals">Manage</button></div>
+        <div id="dashboardGoals"><p class="empty">Create a goal to start tracking progress.</p></div>
+      </article>
+      <article class="card">
+        <div class="card-title"><div><h2>Recent activity</h2><p>Latest recorded transactions</p></div><button class="text-button" data-goto="transactions">View all</button></div>
+        <div id="recentList" class="record-list"><p class="empty">No transactions yet. Add your first entry.</p></div>
+      </article>
+    </section>
+
+    <section id="view-transactions" class="view hidden">
+      <div class="section-heading"><div><p class="eyebrow">RECORDS</p><h1>Tracker</h1></div><button class="primary small" id="newTransaction">＋ Add entry</button></div>
+      <article class="card">
+        <div class="filters">
+          <label>Month <input id="transactionMonth" type="month"></label>
+          <label>Type <select id="transactionFilter"><option value="all">All types</option><option value="income">Income</option><option value="expense">Expense</option></select></label>
+        </div>
+        <div id="transactionList" class="record-list"><p class="empty">No entries for this filter.</p></div>
+      </article>
+    </section>
+
+    <section id="view-planner" class="view hidden">
+      <div class="section-heading"><div><p class="eyebrow">PLAN AHEAD</p><h1>Monthly planner</h1></div></div>
+      <article class="card">
+        <label class="field">Selected month<input id="plannerMonth" type="month"></label>
+        <label class="field">Monthly spending budget (SGD)<input id="monthlyBudget" type="number" min="0" step="0.01" placeholder="e.g. 1200"></label>
+        <button class="primary" id="saveBudget">Save budget</button>
+        <div class="budget-panel">
+          <div class="budget-row"><span>Spending</span><strong id="plannerSpent">S$0.00</strong></div>
+          <div class="progress-track"><div id="budgetProgress" class="progress-fill"></div></div>
+          <div class="budget-row muted"><span id="budgetUsed">0% used</span><span id="budgetRemaining">Remaining S$0.00</span></div>
+          <p id="budgetAdvice" class="insight">Set a budget to get a simple spending check.</p>
+        </div>
+      </article>
+      <article class="card">
+        <div class="card-title"><div><h2>Monthly summary</h2><p>Updates when you change the selected month</p></div></div>
+        <div class="summary-grid">
+          <div class="mini-metric"><span>Income</span><strong id="plannerIncome">S$0.00</strong></div>
+          <div class="mini-metric"><span>Expenses</span><strong id="plannerExpenses">S$0.00</strong></div>
+          <div class="mini-metric"><span>Net</span><strong id="plannerNet">S$0.00</strong></div>
+        </div>
+      </article>
+    </section>
+
+    <section id="view-goals" class="view hidden">
+      <div class="section-heading"><div><p class="eyebrow">SAVE WITH PURPOSE</p><h1>Goals</h1></div><button class="primary small" id="newGoal">＋ New goal</button></div>
+      <article class="card">
+        <div class="card-title"><div><h2>Contributions</h2><p>Contributions are tracked separately from spending.</p></div></div>
+        <div id="goalList"><p class="empty">Create your first savings goal.</p></div>
+      </article>
+      <article class="card">
+        <div class="card-title"><div><h2>Goal contribution history</h2><p>All recorded contributions</p></div></div>
+        <div id="contributionList" class="record-list"><p class="empty">No contributions yet.</p></div>
+      </article>
+    </section>
+
+    <section id="view-tools" class="view hidden">
+      <div class="section-heading"><div><p class="eyebrow">CONTROL CENTRE</p><h1>Tools & backup</h1></div></div>
+      <article class="card">
+        <h2>Quick calculator</h2>
+        <p class="muted">Use this for calculations without adding a record.</p>
+        <div class="calc-grid">
+          <input id="calcA" type="number" step="any" value="0" aria-label="First number">
+          <select id="calcOperator" aria-label="Operation"><option value="+">+</option><option value="-">−</option><option value="*">×</option><option value="/">÷</option></select>
+          <input id="calcB" type="number" step="any" value="0" aria-label="Second number">
+        </div>
+        <div id="calcResult" class="calc-result">S$0.00</div>
+      </article>
+      <article class="card">
+        <h2>Export / import backup</h2>
+        <p class="muted">Export a JSON backup and keep it somewhere safe. Importing a backup replaces the app’s current records after confirmation.</p>
+        <div class="button-row"><button class="primary" id="exportBackup">Export backup</button><button class="secondary" id="importBackup">Import backup</button><input id="backupFile" type="file" accept="application/json,.json" hidden></div>
+        <p id="backupStatus" class="small-note" role="status"></p>
+      </article>
+      <article class="card">
+        <h2>Privacy and storage</h2>
+        <ul class="privacy-list">
+          <li>Records are stored in this browser on this device using IndexedDB.</li>
+          <li>No bank connection, account login, or paid AI API is used.</li>
+          <li>Clearing Safari website data can erase local records. Export backups regularly.</li>
+          <li>Phone-only storage does not automatically sync with your Windows PC or another phone.</li>
+        </ul>
+        <button class="danger-outline" id="clearAll">Delete all local data</button>
+      </article>
+    </section>
+  </main>
+
+  <dialog id="transactionDialog">
+    <form id="transactionForm" method="dialog">
+      <div class="dialog-heading"><div><p class="eyebrow">MONEY MOVEMENT</p><h2 id="transactionDialogTitle">Add entry</h2></div><button type="button" class="close-button" data-close="transactionDialog" aria-label="Close">×</button></div>
+      <input id="transactionId" type="hidden">
+      <label class="field">Type<select id="entryType"><option value="income">Income</option><option value="expense">Expense</option></select></label>
+      <label class="field">Description<input id="entryDescription" maxlength="100" required placeholder="Salary, groceries, transport…"></label>
+      <label class="field">Amount (SGD)<input id="entryAmount" type="number" min="0.01" step="0.01" required placeholder="0.00"></label>
+      <label class="field">Category<select id="entryCategory"><option>Salary</option><option>Part-time income</option><option>Side income</option><option>Food</option><option>Transport</option><option>Bills</option><option>Housing</option><option>Shopping</option><option>Health</option><option>Education</option><option>Other</option></select></label>
+      <label class="field">Date<input id="entryDate" type="date" required></label>
+      <div class="button-row"><button type="button" class="secondary" data-close="transactionDialog">Cancel</button><button class="primary" type="submit">Save entry</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="goalDialog">
+    <form id="goalForm" method="dialog">
+      <div class="dialog-heading"><div><p class="eyebrow">SAVINGS TARGET</p><h2 id="goalDialogTitle">New goal</h2></div><button type="button" class="close-button" data-close="goalDialog" aria-label="Close">×</button></div>
+      <input id="goalId" type="hidden">
+      <label class="field">Goal name<input id="goalName" maxlength="80" required placeholder="Emergency fund"></label>
+      <label class="field">Target amount (SGD)<input id="goalTarget" type="number" min="0.01" step="0.01" required placeholder="100000"></label>
+      <label class="field">Target date (optional)<input id="goalDate" type="date"></label>
+      <div class="button-row"><button type="button" class="secondary" data-close="goalDialog">Cancel</button><button class="primary" type="submit">Save goal</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="contributionDialog">
+    <form id="contributionForm" method="dialog">
+      <div class="dialog-heading"><div><p class="eyebrow">GOAL PROGRESS</p><h2>Add contribution</h2></div><button type="button" class="close-button" data-close="contributionDialog" aria-label="Close">×</button></div>
+      <input id="contributionGoalId" type="hidden">
+      <label class="field">Goal<input id="contributionGoalName" readonly></label>
+      <label class="field">Amount (SGD)<input id="contributionAmount" type="number" min="0.01" step="0.01" required placeholder="100"></label>
+      <label class="field">Date<input id="contributionDate" type="date" required></label>
+      <label class="field">Note (optional)<input id="contributionNote" maxlength="100" placeholder="Monthly savings"></label>
+      <div class="button-row"><button type="button" class="secondary" data-close="contributionDialog">Cancel</button><button class="primary" type="submit">Save contribution</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./app.js" defer></script>
+</body>
+</html>
